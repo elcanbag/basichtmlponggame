@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Oyunu</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pongCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('pongCanvas');
+        const context = canvas.getContext('2d');
+
+        // Oyun ayarları
+        const paddleWidth = 10;
+        const paddleHeight = 100;
+        const ballRadius = 10;
+        const paddleSpeed = 8;
+        const ballSpeed = 4;
+
+        // Oyuncu 1 ve Oyuncu 2 paddle'ları
+        const player1 = {
+            x: 0,
+            y: (canvas.height - paddleHeight) / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            dy: 0
+        };
+        
+        const player2 = {
+            x: canvas.width - paddleWidth,
+            y: (canvas.height - paddleHeight) / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            dy: 0
+        };
+
+        // Top
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: ballRadius,
+            speed: ballSpeed,
+            dx: ballSpeed,
+            dy: ballSpeed
+        };
+
+        // Tuş kontrolleri
+        function keyDownHandler(e) {
+            if (e.key === 'ArrowUp') {
+                player2.dy = -paddleSpeed;
+            } else if (e.key === 'ArrowDown') {
+                player2.dy = paddleSpeed;
+            }
+            if (e.key === 'w' || e.key === 'W') {
+                player1.dy = -paddleSpeed;
+            } else if (e.key === 's' || e.key === 'S') {
+                player1.dy = paddleSpeed;
+            }
+        }
+
+        function keyUpHandler(e) {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                player2.dy = 0;
+            }
+            if (e.key === 'w' || e.key === 'W' || e.key === 's' || e.key === 'S') {
+                player1.dy = 0;
+            }
+        }
+
+        document.addEventListener('keydown', keyDownHandler);
+        document.addEventListener('keyup', keyUpHandler);
+
+        function drawPaddle(paddle) {
+            context.fillStyle = '#fff';
+            context.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+        }
+
+        function drawBall() {
+            context.beginPath();
+            context.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            context.fillStyle = '#fff';
+            context.fill();
+            context.closePath();
+        }
+
+        function update() {
+            // Paddle hareketi
+            player1.y += player1.dy;
+            player2.y += player2.dy;
+
+            // Paddle duvar çarpması
+            if (player1.y < 0) {
+                player1.y = 0;
+            } else if (player1.y + player1.height > canvas.height) {
+                player1.y = canvas.height - player1.height;
+            }
+
+            if (player2.y < 0) {
+                player2.y = 0;
+            } else if (player2.y + player2.height > canvas.height) {
+                player2.y = canvas.height - player2.height;
+            }
+
+            // Top hareketi
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Top duvar çarpması
+            if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                ball.dy *= -1;
+            }
+
+            // Top paddle çarpması
+            if (
+                (ball.x - ball.radius < player1.x + player1.width &&
+                    ball.y > player1.y &&
+                    ball.y < player1.y + player1.height) ||
+                (ball.x + ball.radius > player2.x &&
+                    ball.y > player2.y &&
+                    ball.y < player2.y + player2.height)
+            ) {
+                ball.dx *= -1;
+            }
+
+            // Top sol veya sağ duvardan çıkarsa
+            if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+                // Topu resetle
+                ball.x = canvas.width / 2;
+                ball.y = canvas.height / 2;
+                ball.dx = ballSpeed;
+                ball.dy = ballSpeed;
+            }
+        }
+
+        function draw() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawPaddle(player1);
+            drawPaddle(player2);
+            drawBall();
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>
